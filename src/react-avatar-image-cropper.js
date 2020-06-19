@@ -424,6 +424,16 @@ class AvatarImageCropper extends Component {
         })
     }
 
+    preDrop = (file) => {
+        return new Promise((resolve, reject) => {
+            if (this.props.preDrop) {
+                this.props.preDrop(file)
+            }
+
+            return resolve()
+        })
+    }
+
     onDrop = (evt) => {
         var fileList = evt.target.files
         var acceptedFiles = [];
@@ -444,7 +454,8 @@ class AvatarImageCropper extends Component {
                 relX: 0,
                 relY: 0,
             });
-            this.resetOrientation(file).then((file) => {
+
+            this.preDrop(file).then(() => this.resetOrientation(file)).then((file) => {
                 acceptedFiles.push(file);
                 var src = window.URL.createObjectURL(file);
                 var img = new Image();
@@ -467,6 +478,9 @@ class AvatarImageCropper extends Component {
                         width: sizeW,
                         height: sizeH
                     }
+
+                    // iniq patch: recalculate effective width if the viewport was updated in preDrop
+                    this.avatar2D.width = sizeW
                 };
                 file.preview = src;
 
@@ -721,7 +735,7 @@ class AvatarImageCropper extends Component {
 /* canvas-toBlob.js
  * A canvas.toBlob() implementation.
  * 2016-05-26
- * 
+ *
  * By Eli Grey, http://eligrey.com and Devin Samarin, https://github.com/eboyjr
  * License: MIT
  *   See https://github.com/eligrey/canvas-toBlob.js/blob/master/LICENSE.md

@@ -461,6 +461,10 @@ class AvatarImageCropper extends Component {
                 var img = new Image();
                 img.src = src;
                 img.onload = () => {
+                    // preDrop patch: recalculate effective size if the viewport was updated in preDrop
+                    this.avatar2D.width = this.ele.offsetWidth;
+                    this.avatar2D.height = this.ele.offsetHeight;
+
                     this.img = img;
                     this.img2D.width = img.width;
                     this.img2D.height = img.height;
@@ -478,9 +482,6 @@ class AvatarImageCropper extends Component {
                         width: sizeW,
                         height: sizeH
                     }
-
-                    // iniq patch: recalculate effective width if the viewport was updated in preDrop
-                    this.avatar2D.width = sizeW
                 };
                 file.preview = src;
 

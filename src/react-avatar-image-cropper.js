@@ -750,6 +750,8 @@ class AvatarImageCropper extends Component {
 
 (function (view) {
     "use strict";
+
+  if (view) {
     var
         Uint8Array = view.Uint8Array
         , HTMLCanvasElement = view.HTMLCanvasElement
@@ -857,7 +859,8 @@ class AvatarImageCropper extends Component {
             canvas_proto.toBlobHD = canvas_proto.toBlob;
         }
     }
-}(typeof self !== "undefined" && self || typeof window !== "undefined" && window || this.content || this));
+  }
+}(typeof self !== "undefined" && self || typeof window !== "undefined" && window || this && this.content || this));
 
 
 export default AvatarImageCropper;

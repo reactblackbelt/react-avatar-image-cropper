@@ -788,101 +788,103 @@ AvatarImageCropper.propTypes = {
 (function (view) {
     "use strict";
 
-    var Uint8Array = view.Uint8Array,
-        HTMLCanvasElement = view.HTMLCanvasElement,
-        canvas_proto = HTMLCanvasElement && HTMLCanvasElement.prototype,
-        is_base64_regex = /\s*;\s*base64\s*(?:;|$)/i,
-        to_data_url = "toDataURL",
-        base64_ranks,
-        decode_base64 = function decode_base64(base64) {
-        var len = base64.length,
-            buffer = new Uint8Array(len / 4 * 3 | 0),
-            i = 0,
-            outptr = 0,
-            last = [0, 0],
-            state = 0,
-            save = 0,
-            rank,
-            code,
-            undef;
-        while (len--) {
-            code = base64.charCodeAt(i++);
-            rank = base64_ranks[code - 43];
-            if (rank !== 255 && rank !== undef) {
-                last[1] = last[0];
-                last[0] = code;
-                save = save << 6 | rank;
-                state++;
-                if (state === 4) {
-                    buffer[outptr++] = save >>> 16;
-                    if (last[1] !== 61 /* padding character */) {
-                            buffer[outptr++] = save >>> 8;
-                        }
-                    if (last[0] !== 61 /* padding character */) {
-                            buffer[outptr++] = save;
-                        }
-                    state = 0;
+    if (view) {
+        var Uint8Array = view.Uint8Array,
+            HTMLCanvasElement = view.HTMLCanvasElement,
+            canvas_proto = HTMLCanvasElement && HTMLCanvasElement.prototype,
+            is_base64_regex = /\s*;\s*base64\s*(?:;|$)/i,
+            to_data_url = "toDataURL",
+            base64_ranks,
+            decode_base64 = function decode_base64(base64) {
+            var len = base64.length,
+                buffer = new Uint8Array(len / 4 * 3 | 0),
+                i = 0,
+                outptr = 0,
+                last = [0, 0],
+                state = 0,
+                save = 0,
+                rank,
+                code,
+                undef;
+            while (len--) {
+                code = base64.charCodeAt(i++);
+                rank = base64_ranks[code - 43];
+                if (rank !== 255 && rank !== undef) {
+                    last[1] = last[0];
+                    last[0] = code;
+                    save = save << 6 | rank;
+                    state++;
+                    if (state === 4) {
+                        buffer[outptr++] = save >>> 16;
+                        if (last[1] !== 61 /* padding character */) {
+                                buffer[outptr++] = save >>> 8;
+                            }
+                        if (last[0] !== 61 /* padding character */) {
+                                buffer[outptr++] = save;
+                            }
+                        state = 0;
+                    }
                 }
             }
-        }
-        // 2/3 chance there's going to be some null bytes at the end, but that
-        // doesn't really matter with most image formats.
-        // If it somehow matters for you, truncate the buffer up outptr.
-        return buffer;
-    };
-    if (Uint8Array) {
-        base64_ranks = new Uint8Array([62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, 0, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]);
-    }
-    if (HTMLCanvasElement && (!canvas_proto.toBlob || !canvas_proto.toBlobHD)) {
-        if (!canvas_proto.toBlob) canvas_proto.toBlob = function (callback, type /*, ...args*/) {
-            if (!type) {
-                type = "image/png";
-            }if (this.mozGetAsFile) {
-                callback(this.mozGetAsFile("canvas", type));
-                return;
-            }if (this.msToBlob && /^\s*image\/png\s*(?:$|;)/i.test(type)) {
-                callback(this.msToBlob());
-                return;
-            }
-
-            var args = Array.prototype.slice.call(arguments, 1),
-                dataURI = this[to_data_url].apply(this, args),
-                header_end = dataURI.indexOf(","),
-                data = dataURI.substring(header_end + 1),
-                is_base64 = is_base64_regex.test(dataURI.substring(0, header_end)),
-                blob;
-            if (Blob.fake) {
-                // no reason to decode a data: URI that's just going to become a data URI again
-                blob = new Blob();
-                if (is_base64) {
-                    blob.encoding = "base64";
-                } else {
-                    blob.encoding = "URI";
-                }
-                blob.data = data;
-                blob.size = data.length;
-            } else if (Uint8Array) {
-                if (is_base64) {
-                    blob = new Blob([decode_base64(data)], { type: type });
-                } else {
-                    blob = new Blob([decodeURIComponent(data)], { type: type });
-                }
-            }
-            callback(blob);
+            // 2/3 chance there's going to be some null bytes at the end, but that
+            // doesn't really matter with most image formats.
+            // If it somehow matters for you, truncate the buffer up outptr.
+            return buffer;
         };
+        if (Uint8Array) {
+            base64_ranks = new Uint8Array([62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, 0, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]);
+        }
+        if (HTMLCanvasElement && (!canvas_proto.toBlob || !canvas_proto.toBlobHD)) {
+            if (!canvas_proto.toBlob) canvas_proto.toBlob = function (callback, type /*, ...args*/) {
+                if (!type) {
+                    type = "image/png";
+                }if (this.mozGetAsFile) {
+                    callback(this.mozGetAsFile("canvas", type));
+                    return;
+                }if (this.msToBlob && /^\s*image\/png\s*(?:$|;)/i.test(type)) {
+                    callback(this.msToBlob());
+                    return;
+                }
 
-        if (!canvas_proto.toBlobHD && canvas_proto.toDataURLHD) {
-            canvas_proto.toBlobHD = function () {
-                to_data_url = "toDataURLHD";
-                var blob = this.toBlob();
-                to_data_url = "toDataURL";
-                return blob;
+                var args = Array.prototype.slice.call(arguments, 1),
+                    dataURI = this[to_data_url].apply(this, args),
+                    header_end = dataURI.indexOf(","),
+                    data = dataURI.substring(header_end + 1),
+                    is_base64 = is_base64_regex.test(dataURI.substring(0, header_end)),
+                    blob;
+                if (Blob.fake) {
+                    // no reason to decode a data: URI that's just going to become a data URI again
+                    blob = new Blob();
+                    if (is_base64) {
+                        blob.encoding = "base64";
+                    } else {
+                        blob.encoding = "URI";
+                    }
+                    blob.data = data;
+                    blob.size = data.length;
+                } else if (Uint8Array) {
+                    if (is_base64) {
+                        blob = new Blob([decode_base64(data)], { type: type });
+                    } else {
+                        blob = new Blob([decodeURIComponent(data)], { type: type });
+                    }
+                }
+                callback(blob);
             };
-        } else {
-            canvas_proto.toBlobHD = canvas_proto.toBlob;
+
+            if (!canvas_proto.toBlobHD && canvas_proto.toDataURLHD) {
+                canvas_proto.toBlobHD = function () {
+                    to_data_url = "toDataURLHD";
+                    var blob = this.toBlob();
+                    to_data_url = "toDataURL";
+                    return blob;
+                };
+            } else {
+                canvas_proto.toBlobHD = canvas_proto.toBlob;
+            }
         }
     }
-})(typeof self !== "undefined" && self || typeof window !== "undefined" && window || undefined.content || undefined);
+})(typeof self !== "undefined" && self || typeof window !== "undefined" && window || undefined && undefined.content || undefined);
 
 exports.default = AvatarImageCropper;
 module.exports = exports.default;
@@ -1166,7 +1168,7 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],4:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -1270,7 +1272,7 @@ checkPropTypes.resetWarningCache = function() {
 
 module.exports = checkPropTypes;
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./lib/ReactPropTypesSecret":8,"_process":3}],5:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -1338,7 +1340,7 @@ module.exports = function() {
 };
 
 },{"./lib/ReactPropTypesSecret":8}],6:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -1931,9 +1933,9 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
   return ReactPropTypes;
 };
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./checkPropTypes":4,"./lib/ReactPropTypesSecret":8,"_process":3,"object-assign":2,"react-is":11}],7:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -1954,7 +1956,7 @@ if (process.env.NODE_ENV !== 'production') {
   module.exports = require('./factoryWithThrowingShims')();
 }
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./factoryWithThrowingShims":5,"./factoryWithTypeCheckers":6,"_process":3,"react-is":11}],8:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -1970,8 +1972,8 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 module.exports = ReactPropTypesSecret;
 
 },{}],9:[function(require,module,exports){
-(function (process){
-/** @license React v16.9.0
+(function (process){(function (){
+/** @license React v16.13.1
  * react-is.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -1988,21 +1990,18 @@ if (process.env.NODE_ENV !== "production") {
   (function() {
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-
 var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
 var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
 var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
 var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
 var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
 var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
-// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
 // (unstable) APIs that have been removed. Can we remove the symbols?
+
 var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
 var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
 var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
@@ -2010,71 +2009,20 @@ var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
 var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for('react.suspense_list') : 0xead8;
 var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
 var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
+var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for('react.block') : 0xead9;
 var REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for('react.fundamental') : 0xead5;
 var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for('react.responder') : 0xead6;
+var REACT_SCOPE_TYPE = hasSymbol ? Symbol.for('react.scope') : 0xead7;
 
 function isValidElementType(type) {
-  return typeof type === 'string' || typeof type === 'function' ||
-  // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-  type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_RESPONDER_TYPE);
+  return typeof type === 'string' || typeof type === 'function' || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
+  type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_RESPONDER_TYPE || type.$$typeof === REACT_SCOPE_TYPE || type.$$typeof === REACT_BLOCK_TYPE);
 }
-
-/**
- * Forked from fbjs/warning:
- * https://github.com/facebook/fbjs/blob/e66ba20ad5be433eb54423f2b097d829324d9de6/packages/fbjs/src/__forks__/warning.js
- *
- * Only change is we use console.warn instead of console.error,
- * and do nothing when 'console' is not supported.
- * This really simplifies the code.
- * ---
- * Similar to invariant but only logs a warning if the condition is not met.
- * This can be used to log issues in development environments in critical
- * paths. Removing the logging code for production environments will keep the
- * same logic and follow the same code paths.
- */
-
-var lowPriorityWarning = function () {};
-
-{
-  var printWarning = function (format) {
-    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
-    }
-
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, function () {
-      return args[argIndex++];
-    });
-    if (typeof console !== 'undefined') {
-      console.warn(message);
-    }
-    try {
-      // --- Welcome to debugging React ---
-      // This error was thrown as a convenience so that you can use this stack
-      // to find the callsite that caused this warning to fire.
-      throw new Error(message);
-    } catch (x) {}
-  };
-
-  lowPriorityWarning = function (condition, format) {
-    if (format === undefined) {
-      throw new Error('`lowPriorityWarning(condition, format, ...args)` requires a warning ' + 'message argument');
-    }
-    if (!condition) {
-      for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-        args[_key2 - 2] = arguments[_key2];
-      }
-
-      printWarning.apply(undefined, [format].concat(args));
-    }
-  };
-}
-
-var lowPriorityWarning$1 = lowPriorityWarning;
 
 function typeOf(object) {
   if (typeof object === 'object' && object !== null) {
     var $$typeof = object.$$typeof;
+
     switch ($$typeof) {
       case REACT_ELEMENT_TYPE:
         var type = object.type;
@@ -2087,29 +2035,32 @@ function typeOf(object) {
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
             return type;
+
           default:
             var $$typeofType = type && type.$$typeof;
 
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:
               case REACT_FORWARD_REF_TYPE:
+              case REACT_LAZY_TYPE:
+              case REACT_MEMO_TYPE:
               case REACT_PROVIDER_TYPE:
                 return $$typeofType;
+
               default:
                 return $$typeof;
             }
+
         }
-      case REACT_LAZY_TYPE:
-      case REACT_MEMO_TYPE:
+
       case REACT_PORTAL_TYPE:
         return $$typeof;
     }
   }
 
   return undefined;
-}
+} // AsyncMode is deprecated along with isAsyncMode
 
-// AsyncMode is deprecated along with isAsyncMode
 var AsyncMode = REACT_ASYNC_MODE_TYPE;
 var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
 var ContextConsumer = REACT_CONTEXT_TYPE;
@@ -2123,17 +2074,17 @@ var Portal = REACT_PORTAL_TYPE;
 var Profiler = REACT_PROFILER_TYPE;
 var StrictMode = REACT_STRICT_MODE_TYPE;
 var Suspense = REACT_SUSPENSE_TYPE;
+var hasWarnedAboutDeprecatedIsAsyncMode = false; // AsyncMode should be deprecated
 
-var hasWarnedAboutDeprecatedIsAsyncMode = false;
-
-// AsyncMode should be deprecated
 function isAsyncMode(object) {
   {
     if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-      hasWarnedAboutDeprecatedIsAsyncMode = true;
-      lowPriorityWarning$1(false, 'The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
+      hasWarnedAboutDeprecatedIsAsyncMode = true; // Using console['warn'] to evade Babel and ESLint
+
+      console['warn']('The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
     }
   }
+
   return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
 }
 function isConcurrentMode(object) {
@@ -2173,7 +2124,6 @@ function isSuspense(object) {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
 }
 
-exports.typeOf = typeOf;
 exports.AsyncMode = AsyncMode;
 exports.ConcurrentMode = ConcurrentMode;
 exports.ContextConsumer = ContextConsumer;
@@ -2187,7 +2137,6 @@ exports.Portal = Portal;
 exports.Profiler = Profiler;
 exports.StrictMode = StrictMode;
 exports.Suspense = Suspense;
-exports.isValidElementType = isValidElementType;
 exports.isAsyncMode = isAsyncMode;
 exports.isConcurrentMode = isConcurrentMode;
 exports.isContextConsumer = isContextConsumer;
@@ -2201,12 +2150,14 @@ exports.isPortal = isPortal;
 exports.isProfiler = isProfiler;
 exports.isStrictMode = isStrictMode;
 exports.isSuspense = isSuspense;
+exports.isValidElementType = isValidElementType;
+exports.typeOf = typeOf;
   })();
 }
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"_process":3}],10:[function(require,module,exports){
-/** @license React v16.9.0
+/** @license React v16.13.1
  * react-is.production.min.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -2215,15 +2166,15 @@ exports.isSuspense = isSuspense;
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';Object.defineProperty(exports,"__esModule",{value:!0});
-var b="function"===typeof Symbol&&Symbol.for,c=b?Symbol.for("react.element"):60103,d=b?Symbol.for("react.portal"):60106,e=b?Symbol.for("react.fragment"):60107,f=b?Symbol.for("react.strict_mode"):60108,g=b?Symbol.for("react.profiler"):60114,h=b?Symbol.for("react.provider"):60109,k=b?Symbol.for("react.context"):60110,l=b?Symbol.for("react.async_mode"):60111,m=b?Symbol.for("react.concurrent_mode"):60111,n=b?Symbol.for("react.forward_ref"):60112,p=b?Symbol.for("react.suspense"):60113,q=b?Symbol.for("react.suspense_list"):
-60120,r=b?Symbol.for("react.memo"):60115,t=b?Symbol.for("react.lazy"):60116,v=b?Symbol.for("react.fundamental"):60117,w=b?Symbol.for("react.responder"):60118;function x(a){if("object"===typeof a&&null!==a){var u=a.$$typeof;switch(u){case c:switch(a=a.type,a){case l:case m:case e:case g:case f:case p:return a;default:switch(a=a&&a.$$typeof,a){case k:case n:case h:return a;default:return u}}case t:case r:case d:return u}}}function y(a){return x(a)===m}exports.typeOf=x;exports.AsyncMode=l;
-exports.ConcurrentMode=m;exports.ContextConsumer=k;exports.ContextProvider=h;exports.Element=c;exports.ForwardRef=n;exports.Fragment=e;exports.Lazy=t;exports.Memo=r;exports.Portal=d;exports.Profiler=g;exports.StrictMode=f;exports.Suspense=p;
-exports.isValidElementType=function(a){return"string"===typeof a||"function"===typeof a||a===e||a===m||a===g||a===f||a===p||a===q||"object"===typeof a&&null!==a&&(a.$$typeof===t||a.$$typeof===r||a.$$typeof===h||a.$$typeof===k||a.$$typeof===n||a.$$typeof===v||a.$$typeof===w)};exports.isAsyncMode=function(a){return y(a)||x(a)===l};exports.isConcurrentMode=y;exports.isContextConsumer=function(a){return x(a)===k};exports.isContextProvider=function(a){return x(a)===h};
-exports.isElement=function(a){return"object"===typeof a&&null!==a&&a.$$typeof===c};exports.isForwardRef=function(a){return x(a)===n};exports.isFragment=function(a){return x(a)===e};exports.isLazy=function(a){return x(a)===t};exports.isMemo=function(a){return x(a)===r};exports.isPortal=function(a){return x(a)===d};exports.isProfiler=function(a){return x(a)===g};exports.isStrictMode=function(a){return x(a)===f};exports.isSuspense=function(a){return x(a)===p};
+'use strict';var b="function"===typeof Symbol&&Symbol.for,c=b?Symbol.for("react.element"):60103,d=b?Symbol.for("react.portal"):60106,e=b?Symbol.for("react.fragment"):60107,f=b?Symbol.for("react.strict_mode"):60108,g=b?Symbol.for("react.profiler"):60114,h=b?Symbol.for("react.provider"):60109,k=b?Symbol.for("react.context"):60110,l=b?Symbol.for("react.async_mode"):60111,m=b?Symbol.for("react.concurrent_mode"):60111,n=b?Symbol.for("react.forward_ref"):60112,p=b?Symbol.for("react.suspense"):60113,q=b?
+Symbol.for("react.suspense_list"):60120,r=b?Symbol.for("react.memo"):60115,t=b?Symbol.for("react.lazy"):60116,v=b?Symbol.for("react.block"):60121,w=b?Symbol.for("react.fundamental"):60117,x=b?Symbol.for("react.responder"):60118,y=b?Symbol.for("react.scope"):60119;
+function z(a){if("object"===typeof a&&null!==a){var u=a.$$typeof;switch(u){case c:switch(a=a.type,a){case l:case m:case e:case g:case f:case p:return a;default:switch(a=a&&a.$$typeof,a){case k:case n:case t:case r:case h:return a;default:return u}}case d:return u}}}function A(a){return z(a)===m}exports.AsyncMode=l;exports.ConcurrentMode=m;exports.ContextConsumer=k;exports.ContextProvider=h;exports.Element=c;exports.ForwardRef=n;exports.Fragment=e;exports.Lazy=t;exports.Memo=r;exports.Portal=d;
+exports.Profiler=g;exports.StrictMode=f;exports.Suspense=p;exports.isAsyncMode=function(a){return A(a)||z(a)===l};exports.isConcurrentMode=A;exports.isContextConsumer=function(a){return z(a)===k};exports.isContextProvider=function(a){return z(a)===h};exports.isElement=function(a){return"object"===typeof a&&null!==a&&a.$$typeof===c};exports.isForwardRef=function(a){return z(a)===n};exports.isFragment=function(a){return z(a)===e};exports.isLazy=function(a){return z(a)===t};
+exports.isMemo=function(a){return z(a)===r};exports.isPortal=function(a){return z(a)===d};exports.isProfiler=function(a){return z(a)===g};exports.isStrictMode=function(a){return z(a)===f};exports.isSuspense=function(a){return z(a)===p};
+exports.isValidElementType=function(a){return"string"===typeof a||"function"===typeof a||a===e||a===m||a===g||a===f||a===p||a===q||"object"===typeof a&&null!==a&&(a.$$typeof===t||a.$$typeof===r||a.$$typeof===h||a.$$typeof===k||a.$$typeof===n||a.$$typeof===w||a.$$typeof===x||a.$$typeof===y||a.$$typeof===v)};exports.typeOf=z;
 
 },{}],11:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 'use strict';
 
 if (process.env.NODE_ENV === 'production') {
@@ -2232,6 +2183,6 @@ if (process.env.NODE_ENV === 'production') {
   module.exports = require('./cjs/react-is.development.js');
 }
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./cjs/react-is.development.js":9,"./cjs/react-is.production.min.js":10,"_process":3}]},{},[1])(1)
 });
